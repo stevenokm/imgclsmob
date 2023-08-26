@@ -10,6 +10,7 @@ __all__ = ['ResNet', 'resnet10', 'resnet12', 'resnet14', 'resnetbc14b', 'resnet1
 
 import os
 import torch.nn as nn
+from torch.distributed import rpc
 from .common import conv1x1_block, conv3x3_block, conv7x7_block
 
 
@@ -283,6 +284,8 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
+        if type(x) is rpc.api.RRef:
+            x = x.local_value()
         x = x.view(x.size(0), -1)
         x = self.output(x)
         return x
